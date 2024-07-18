@@ -47,5 +47,5 @@ if __name__ == '__main__':
         sort_index = [i for i, x in sorted(enumerate(cosineSimilarities), reverse=True, key=lambda x: x[1])]
         sorted_doc_sim_list = list(zip(sort_index, sorted(cosineSimilarities, reverse=True)))
         document_comparisons(i, sorted_doc_sim_list, df)
-        with open("similarities.csv","a") as fd:
-            fd.write(f"doc id: {i}, Sim: {' '.join(map(str,cosineSimilarities))}\n")
+        # with open("similarities.csv","a") as fd:
+        #     fd.write(f"doc id: {i}, Sim: {' '.join(map(str,cosineSimilarities))}\n")
