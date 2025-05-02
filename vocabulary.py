@@ -20,9 +20,9 @@ if __name__ == "__main__":
 
     text_list = sample_df["excerpt"].to_list()
     master_string = ' '.join(text_list)
-    #cleaned = re.sub(r"[,]", "", master_string)
-    print(sample_df)
+    cleaned = re.sub(r"[,]", "", master_string)
+    print(cleaned)
 
     store_path = "./lemmas/"
-    #with open("./lemmas/master_string.txt", "w") as f:
-    #    f.write(cleaned)
+    with open("./lemmas/master_string.txt", "w") as f:
+        f.write(cleaned)

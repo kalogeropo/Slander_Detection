@@ -67,7 +67,9 @@ def parse_file(file_path):
                 #print("Rel not exits")
         elif line:
             # Add non-empty lines to the current excerpt
-            line =  re.sub(r'\’|\…|\.+|\!|\;|\:|\[|\]|\s{2,}|\d+', "", line).lower()
+            #line =  re.sub(r'\’|\…|\.+|\!|\;|\:|\[|\]|\s{2,}|\d+', "", line).lower()
+            line =  re.sub(r'\…|\.+|\!|\;|\:|\[|\]|\s{2,}|\d+', "", line).lower()
+
             current_excerpt.append(line)
 
     # Save the last author's data if applicable
