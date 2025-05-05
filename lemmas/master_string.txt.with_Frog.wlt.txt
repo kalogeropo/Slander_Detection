@@ -213,12 +213,12 @@
 εἰς	εἰς	R---------
 αἰτίαν	αἰτία	N--s---fa-
 καθιστάναι	καθίστημι	V---pna---
-(ἐκ	(ἐκ	V-2ppia---
-τούτων	οὗτος	Pd-p---mg-
+ἐκ	ἐκ	R---------
+τούτων	οὗτος	Pd-p---ng-
 γὰρ	γάρ	D---------
 ἂν	ἄν	D---------
 μάλιστα	μάλα	D--------s
-χρηματίζοιντο)	χρηματίζοιντο)	V--sppamg-
+χρηματίζοιντο	χρηματίζω	V-3ppoe---
 ἀκούω	ἀκούω	V-1spia---
 γὰρ	γάρ	D---------
 ἔγωγε	ἐγώ	Pp1s---mn-
@@ -230,8 +230,8 @@
 οἶμαι	οἴμη	N--p---fn-
 εἰδέναι	οἶδα	V---rna---
 ὅτι	ὅτι	C---------
-“πάντων	“πάντων	N--p---ng-
-δεινότατόν	δεινότατόν	Pk1s---ma-
+πάντων	πᾶς	Px-p---mg-
+δεινότατόν	δεινότατόν	Pd-s---ma-
 ἐστι	εἰμί	V-3spia---
 διαβολή	διαβολή	N--s---fv-
 ταῖς	ὁ	Pp3p---fd-
@@ -438,7 +438,7 @@
 δὲ	δέ	Gf--------
 τὴν	ὁ	S--s---fa-
 διαβολὴν	διαβολή	N--s---fa-
-“διάστασιν	“διάστασιν	N--s---fa-
+διάστασιν	διάστασις	N--s---fa-
 φαινομένων	φαίνω	V--pppefg-
 φίλων	φίλος	N--p---mg-
 ψευδεῖ	ψεύδω	V-3spia---
@@ -965,13 +965,13 @@
 # ../glem/glem/glem.py -f master_string.txt -v -s with_Frog [1.3.2]
 #
 # line count 1 word count 964
-# Frog lemma                                                      64
+# Frog lemma                                                      60
 # multi lemmas, no pos tag match, highest frequency               69
 # multi lemmas, no tag, highest frequency                          0
 # multi lemmas, no tag, other frequency                            0
-# multi lemmas, pos tag match, and highest frequency             475
-# multi lemmas, pos tag match, but other frequency                50
-# one lemma, but different pos tag                               155
+# multi lemmas, pos tag match, and highest frequency             478
+# multi lemmas, pos tag match, but other frequency                49
+# one lemma, but different pos tag                               156
 # one lemma, no tag                                                0
-# one lemma, same pos tag                                        151
+# one lemma, same pos tag                                        152
 # unknown                                                          0
