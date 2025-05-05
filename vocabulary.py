@@ -6,6 +6,7 @@ import re
 
 sample_file = './sample_col.csv'
 path = "./sample_collection"
+lemmas = "./lemmas/master_string.txt.with_Frog.wlt.txt"
 
 
 if __name__ == "__main__":
@@ -20,7 +21,8 @@ if __name__ == "__main__":
 
     text_list = sample_df["excerpt"].to_list()
     master_string = ' '.join(text_list)
-    cleaned = re.sub(r"[,]", "", master_string)
+    cleaned = re.sub(r"\,|\.+|\·|\”|\'", "", master_string)
+    cleaned = re.sub(r"\s+", " ", cleaned)
     print(cleaned)
 
     store_path = "./lemmas/"
