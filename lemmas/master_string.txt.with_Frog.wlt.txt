@@ -40,7 +40,7 @@
 ἐν	ἐν	R---------
 ἀγαθοῖς	ἀγαθός	A--p---md-
 δόλιον	δόλιος	A--s---na-
-ἀστόν·	ἀστόν·	N--s---md-
+ἀστόν	ἀστός	N--s---ma-
 ὅμως	ὅμως	D---------
 μὰν	μὰν	V--sapann-
 σαίνων	σαίνω	V--sppamn-
@@ -59,7 +59,7 @@
 διαβολὴ	διαβολή	N--s---fn-
 γάρ	γάρ	G---------
 ἐστι	εἰμί	V-3spia---
-δεινότατον·	δεινότατον·	A--s---ma-
+δεινότατον	δεινός	A--s---nns
 ἐν	ἐν	R---------
 τῇ	ὁ	Pp3s---fd-
 δύο	δύο	M---------
@@ -161,7 +161,7 @@
 κτῆμα	κτῆμα	N--s---na-
 τὴν	ὁ	S--s---fa-
 φιλίαν	φίλιος	A--p---mg-
-κλέπτουσιν·	κλέπτουσιν·	A--p---na-
+κλέπτουσιν	κλέπτω	V-3ppia---
 ὥστε	ὥστε	C---------
 ἡ	ὁ	S--s---fn-
 ὕβρις	ὕβρις	N--s---fn-
@@ -233,7 +233,7 @@
 “πάντων	“πάντων	N--p---ng-
 δεινότατόν	δεινότατόν	Pk1s---ma-
 ἐστι	εἰμί	V-3spia---
-διαβολή”	διαβολή”	N--s---mn-
+διαβολή	διαβολή	N--s---fv-
 ταῖς	ὁ	Pp3p---fd-
 αὐταῖς	αὐτός	Pp3p---fd-
 κόλαζε	κολάζω	V-2spma---
@@ -268,7 +268,7 @@
 ἔστι	εἰμί	V-3spia---
 μέγιστον	μέγας	A--s---nas
 κακὸν	κακός	A--s---na-
-διαβολή·	διαβολή·	N--s---fa-
+διαβολή	διαβολή	N--s---fv-
 τί	τίς	Pi-s---na-
 γὰρ	γάρ	D---------
 ἂν	ἄν	D---------
@@ -371,7 +371,7 @@
 οὐδὲν	οὐδείς	Px-s---na-
 διαβολῆς	διαβολή	N--s---fg-
 ἐστιν	εἰμί	V-3spia---
-ἐπιπονώτερον·	ἐπιπονώτερον·	N--s---fn-
+ἐπιπονώτερον	ἐπίπονος	D---------
 τὴν	ὁ	S--s---fa-
 ἐν	ἐν	R---------
 ἑτέρῳ	ἕτερος	A--s---nd-
@@ -398,7 +398,7 @@
 οὐδὲν	οὐδείς	Px-s---na-
 διαβολῆς	διαβολή	N--s---fg-
 ἔστι	εἰμί	V-3spia---
-πω·	πω·	V--sppamn-
+πω	πῶ	D---------
 λάθρα	λάθρῃ	D---------
 γὰρ	γάρ	D---------
 ἀπατήσασα	ἀπατήσασα	V--sapafn-
@@ -442,7 +442,7 @@
 φαινομένων	φαίνω	V--pppefg-
 φίλων	φίλος	N--p---mg-
 ψευδεῖ	ψεύδω	V-3spia---
-λόγῳ”·	λόγῳ”·	V---anp---
+λόγῳ	λόγος	N--s---md-
 τοῦτο	οὗτος	Pd-s---na-
 δὲ	δέ	Gf--------
 μὴ	μή	D---------
@@ -537,7 +537,7 @@
 τοῦ	ὁ	S--s---mg-
 μάλιστα	μάλα	D--------s
 ὠφελοῦντος	ὠφελοῦντος	V--sppamg-
-οἰκίαν·	οἰκίαν·	N--s---fn-
+οἰκίαν	οἰκία	N--s---fa-
 εἴη	εἰμί	V-3spoa---
 δ’	δέ	Gf--------
 ἂν	ἄν	D---------
@@ -627,7 +627,7 @@
 ἐστι	εἰμί	V-3spia---
 πᾶσιν	πᾶς	Px-p---od-
 οἶμαι	οἴμη	N--p---fn-
-γνώριμον·	γνώριμον·	A--s---ma-
+γνώριμον	γνώριμος	A--s---na-
 οὐδεὶς	οὐδείς	Px-s---mn-
 γὰρ	γάρ	D---------
 ἂν	ἄν	D---------
@@ -757,7 +757,7 @@
 καὶ	καί	C---------
 ἀμοίρους	ἄμοιρος	A--p---fa-
 λόγων	λόγος	N--p---mg-
-καταδεδικάσθαι·	καταδεδικάσθαι·	A--p---na-
+καταδεδικάσθαι	καταδικάζω	V---rne---
 ὅπερ	ὅσπερ	P--s---nn-
 ἐξ	ἐκ	R---------
 ἅπαντος	ἅπας	Px-s---mg-
@@ -965,13 +965,13 @@
 # ../glem/glem/glem.py -f master_string.txt -v -s with_Frog [1.3.2]
 #
 # line count 1 word count 964
-# Frog lemma                                                      75
-# multi lemmas, no pos tag match, highest frequency               67
+# Frog lemma                                                      64
+# multi lemmas, no pos tag match, highest frequency               69
 # multi lemmas, no tag, highest frequency                          0
 # multi lemmas, no tag, other frequency                            0
-# multi lemmas, pos tag match, and highest frequency             474
+# multi lemmas, pos tag match, and highest frequency             475
 # multi lemmas, pos tag match, but other frequency                50
-# one lemma, but different pos tag                               148
+# one lemma, but different pos tag                               155
 # one lemma, no tag                                                0
-# one lemma, same pos tag                                        150
+# one lemma, same pos tag                                        151
 # unknown                                                          0
