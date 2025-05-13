@@ -10,6 +10,8 @@ lemmas_path = "./lemmas/master_string.txt.with_Frog.wlt.txt"
 
 def main():
 
+    test()
+    
     if not exists(sample_file):
         # create the sample_col.csv
         df = pd.DataFrame.from_dict(parse_file(path))
@@ -25,12 +27,17 @@ def main():
     master_string = ' '.join(text_list)
     cleaned = re.sub(r"\,|\.+|\·|\”|\'|\“|\(|\)", "", master_string)
     cleaned = re.sub(r"\s+", " ", cleaned)
+    cleaned = re.sub(r"ττ", "σσ", cleaned)
+
 
     store_path = "./lemmas/"
     with open("./lemmas/master_string.txt", "w") as f:
         f.write(cleaned)
 
     create_vocabulary(lemmas_path)
+
+def test():
+    print([ord(c) for c in "ώτατόνο"])
 
 def create_vocabulary(source):
     # after creating the lemmas, create a list of unique lemmas to save
