@@ -3,15 +3,17 @@ from os.path import exists
 from parsing_utils import parse_file
 import re
 
+# python3 ../glem/glem/glem.py -f master_string.txt -v -s with_Frog
 
 sample_file = './sample_col.csv'
 path = "./sample_collection"
 lemmas_path = "./lemmas/master_string.txt.with_Frog.wlt.txt"
 
 def main():
-
-    test()
     
+    test()
+    return
+
     if not exists(sample_file):
         # create the sample_col.csv
         df = pd.DataFrame.from_dict(parse_file(path))
@@ -37,7 +39,9 @@ def main():
     create_vocabulary(lemmas_path)
 
 def test():
-    print([ord(c) for c in "ώτατόνο"])
+    word = "διαβολίηι"
+    new_word = re.sub("ηι$", "\u1fc3", word)
+    print(word, "\n", new_word)
 
 def create_vocabulary(source):
     # after creating the lemmas, create a list of unique lemmas to save
