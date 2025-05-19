@@ -69,6 +69,7 @@ def create_vocabulary(source):
     vocab = lemmas["Lemma"].drop_duplicates(ignore_index= True)
 
     print(lemmas.sort_values(by= "Lemma", axis= 0))
+    vocab.to_csv("./lemmas/Lemmas_Vocabulary.csv")
     print(vocab)
 
 
