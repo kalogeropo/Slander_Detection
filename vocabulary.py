@@ -1,7 +1,7 @@
 import pandas as pd
 from os.path import exists
 from parsing_utils import parse_file
-import re
+import re, pickle
 
 # python3 ../glem/glem/glem.py -f master_string.txt -v -s with_Frog
 
@@ -51,11 +51,13 @@ def main():
     cleaned = " ".join(cleaned)
 
 
-    store_path = "./lemmas/"
     with open("./lemmas/master_string.txt", "w") as f:
         f.write(cleaned)
 
-    create_vocabulary(lemmas_path)
+    lemmas, vocab = create_vocabulary(lemmas_path)
+    create_iif(lemmas, sample_df)
+
+
 
 def test():
     word = "διαβολίηι"
@@ -68,9 +70,22 @@ def create_vocabulary(source):
 
     vocab = lemmas["Lemma"].drop_duplicates(ignore_index= True)
 
-    print(lemmas.sort_values(by= "Lemma", axis= 0))
-    vocab.to_csv("./lemmas/Lemmas_Vocabulary.csv")
-    print(vocab)
+    vocab.to_csv("./lemmas/Lemmas_Vocabulary.csv", header= None, index= None)
+    
+    return lemmas, vocab
+
+# inverted index file for later analysis
+def create_iif(lemmas: pd.DataFrame, excerpts: pd.DataFrame):
+
+    lemmas.drop_duplicates(subset= ["Word", "POS-tag"], inplace= True) # keep unique entries of words-pos_tag
+    iif_df = lemmas.set_index(["Lemma", "Word"]).sort_index() # sort by lemmas and words
+    iif_df["Excerpt"] = [[] for i in range(iif_df.size)] # create a column of lists of excerpt occurances
+    
+    print(type(excerpts))
+    for text in excerpts:
+        print(text[0])
+
+    iif_df.to_csv("./test.csv")
 
 
 if __name__ == "__main__":
