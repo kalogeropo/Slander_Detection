@@ -35,6 +35,28 @@ def main():
     create_iif(lemmas, sample_df)
 
 
+def create_vocabulary(source):
+    # after creating the lemmas, create a list of unique lemmas to save
+    lemmas = pd.read_csv(source, header= None, skipfooter=13, sep= "\t", names= ["Word", "Lemma", "POS-tag"], engine= "python")
+
+    vocab = lemmas["Lemma"].drop_duplicates(ignore_index= True)
+
+    vocab.to_csv("./lemmas/Lemmas_Vocabulary.csv", header= None, index= None)
+    
+    return lemmas, vocab
+
+
+# inverted index file for later analysis
+def create_iif(lemmas: pd.DataFrame, excerpts: pd.DataFrame):
+
+    print(excerpts)
+    lemmas.drop_duplicates(subset= ["Word", "POS-tag"], inplace= True) # keep unique entries of words-pos_tag
+    iif_df = lemmas.set_index(["Lemma", "Word"]).sort_index() # sort by lemmas and words
+    iif_df["Excerpt"] = [[] for i in range(iif_df.size)] # create a column of lists of excerpt occurances
+    
+    iif_df.to_csv("./test.csv")
+
+
 # Function to process texts to brong them to an acceptable form
 def text_clean_up(text: str):
     # remove punctuations and same value letters
@@ -61,32 +83,6 @@ def text_clean_up(text: str):
 
     cleaned = " ".join(cleaned)
     return cleaned
-
-def test():
-    word = "διαβολίηι"
-    new_word = re.sub("ηι$", "\u1fc3", word)
-    print(word, "\n", new_word)
-
-def create_vocabulary(source):
-    # after creating the lemmas, create a list of unique lemmas to save
-    lemmas = pd.read_csv(source, header= None, skipfooter=13, sep= "\t", names= ["Word", "Lemma", "POS-tag"], engine= "python")
-
-    vocab = lemmas["Lemma"].drop_duplicates(ignore_index= True)
-
-    vocab.to_csv("./lemmas/Lemmas_Vocabulary.csv", header= None, index= None)
-    
-    return lemmas, vocab
-
-# inverted index file for later analysis
-def create_iif(lemmas: pd.DataFrame, excerpts: pd.DataFrame):
-
-    lemmas.drop_duplicates(subset= ["Word", "POS-tag"], inplace= True) # keep unique entries of words-pos_tag
-    iif_df = lemmas.set_index(["Lemma", "Word"]).sort_index() # sort by lemmas and words
-    iif_df["Excerpt"] = [[] for i in range(iif_df.size)] # create a column of lists of excerpt occurances
-    
-    
-
-    iif_df.to_csv("./test.csv")
 
 
 if __name__ == "__main__":
