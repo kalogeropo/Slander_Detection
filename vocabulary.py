@@ -52,9 +52,9 @@ def create_iif(lemmas: pd.DataFrame, excerpts: pd.DataFrame):
     lemmas.sort_values(by= "Lemma", inplace= True)
     lemmas.drop_duplicates(subset= ["Word", "POS-tag"], inplace= True) # keep unique entries of words-pos_tag
 
-    iif_df = lemmas.set_index(["Lemma", "Word"], drop= True, inplace= True) # sort by lemmas and words
-    iif_df["Excerpt"] = 0 #[[] for i in range(iif_df.size)] # create a column of lists of excerpt occurances
-    print(iif_df.head(20))
+    iif_df = lemmas.set_index(["Lemma", "Word"], drop= True) # sort by lemmas and words
+    iif_df.insert(1, "Excerpt", [[] for i in range(len(iif_df.index))]) 
+    print(iif_df.loc["αἴτιος", ["POS-tag", "Excerpt"]])
 
     iif_df.to_csv("./test.csv")
 
