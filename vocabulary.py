@@ -49,11 +49,13 @@ def create_vocabulary(source):
 # inverted index file for later analysis
 def create_iif(lemmas: pd.DataFrame, excerpts: pd.DataFrame):
 
-    print(excerpts)
+    lemmas.sort_values(by= "Lemma", inplace= True)
     lemmas.drop_duplicates(subset= ["Word", "POS-tag"], inplace= True) # keep unique entries of words-pos_tag
-    iif_df = lemmas.set_index(["Lemma", "Word"]).sort_index() # sort by lemmas and words
-    iif_df["Excerpt"] = [[] for i in range(iif_df.size)] # create a column of lists of excerpt occurances
-    
+
+    iif_df = lemmas.set_index(["Lemma", "Word"], drop= True, inplace= True) # sort by lemmas and words
+    iif_df["Excerpt"] = 0 #[[] for i in range(iif_df.size)] # create a column of lists of excerpt occurances
+    print(iif_df.head(20))
+
     iif_df.to_csv("./test.csv")
 
 
