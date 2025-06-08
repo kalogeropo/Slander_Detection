@@ -10,8 +10,6 @@ path = "./sample_collection"
 lemmas_path = "./lemmas/master_string.txt.with_Frog.wlt.txt"
 
 def main():
-    
-    #test()
 
     if not exists(sample_file):
         # create the sample_col.csv
@@ -21,17 +19,30 @@ def main():
     if not exists(lemmas_path):
         print("There's no lemma file!\nPlease go to /lemmas and run\n[ python3 ../glem/glem/glem.py -f master_string.txt -v -s with_Frog ]")
         return
+
     #load all texts into a string to parse
     sample_df = pd.read_csv(sample_file, usecols= [2], skiprows= [1])
 
+    sample_df["excerpt"] = sample_df["excerpt"].apply(text_clean_up)
+
     text_list = sample_df["excerpt"].to_list()
     master_string = ' '.join(text_list)
+
+    with open("./lemmas/master_string.txt", "w") as f:
+        f.write(master_string)
+
+    lemmas, vocab = create_vocabulary(lemmas_path)
+    create_iif(lemmas, sample_df)
+
+
+# Function to process texts to brong them to an acceptable form
+def text_clean_up(text: str):
     # remove punctuations and same value letters
-    cleaned = re.sub(r"\,|\.+|\·|\”|\'|\“|\(|\)", "", master_string)
+    cleaned = re.sub(r"\,|\.+|\·|\”|\'|\“|\(|\)", "", text)
     cleaned = re.sub(r"\s+", " ", cleaned)
     cleaned = re.sub(r"ττ", "σσ", cleaned)
 
-    # some transformation for hanlding unexpected cases of Dotiki klisi
+    # some transformation for handling unexpected cases of Dotiki klisi
     # used unicode characters for the substitution
     cleaned = cleaned.split()    
     for i, w in enumerate(cleaned):
@@ -49,15 +60,7 @@ def main():
                 cleaned[i] = re.sub("ηι$", "\u1fc3", w)  # ηι - ῃ
 
     cleaned = " ".join(cleaned)
-
-
-    with open("./lemmas/master_string.txt", "w") as f:
-        f.write(cleaned)
-
-    lemmas, vocab = create_vocabulary(lemmas_path)
-    create_iif(lemmas, sample_df)
-
-
+    return cleaned
 
 def test():
     word = "διαβολίηι"
@@ -81,9 +84,7 @@ def create_iif(lemmas: pd.DataFrame, excerpts: pd.DataFrame):
     iif_df = lemmas.set_index(["Lemma", "Word"]).sort_index() # sort by lemmas and words
     iif_df["Excerpt"] = [[] for i in range(iif_df.size)] # create a column of lists of excerpt occurances
     
-    print(type(excerpts))
-    for text in excerpts:
-        print(text[0])
+    
 
     iif_df.to_csv("./test.csv")
 
