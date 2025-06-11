@@ -2,6 +2,7 @@ import pandas as pd
 from os.path import exists
 from parsing_utils import parse_file
 import re, pickle
+import spacy
 
 # python3 ../glem/glem/glem.py -f master_string.txt -v -s with_Frog
 
@@ -31,8 +32,9 @@ def main():
     with open("./lemmas/master_string.txt", "w") as f:
         f.write(master_string)
 
-    lemmas, vocab = create_vocabulary(lemmas_path)
-    create_iif(lemmas, sample_df)
+    #lemmas, vocab = create_vocabulary(lemmas_path)
+    grecy_test(master_string)
+    #create_iif(lemmas, sample_df)
 
 
 def create_vocabulary(source):
@@ -59,12 +61,23 @@ def create_iif(lemmas: pd.DataFrame, excerpts: pd.DataFrame):
     iif_df.to_csv("./test.csv")
 
 
+def grecy_test(text: str):
+    nlp = spacy.load("grc_proiel_trf")
+    doc = nlp(text)
+
+    for token in doc:
+        print(f'{token.text}\t lemma: {token.lemma_}\t pos:{token.pos_}')
+
 # Function to process texts to brong them to an acceptable form
 def text_clean_up(text: str):
     # remove punctuations and same value letters
     cleaned = re.sub(r"\,|\.+|\·|\”|\'|\“|\(|\)", "", text)
     cleaned = re.sub(r"\s+", " ", cleaned)
-    cleaned = re.sub(r"ττ", "σσ", cleaned)
+    cleaned = re.sub(r"\,|\.+|\·|\”|\'|\“|\(|\)", "σσ", cleaned)
+
+    # for grecy: Handle different accents of apostrophes
+    cleaned = re.sub(r"[ʼ’‘′‵ʹʾʿ`´`´ʹ͵ͻͼ’＇՚]", "\u02BC", cleaned)  # gpt prompted, all common variations that could be an apostrophe
+
 
     # some transformation for handling unexpected cases of Dotiki klisi
     # used unicode characters for the substitution
