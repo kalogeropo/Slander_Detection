@@ -10,6 +10,7 @@ sample_file = './sample_col.csv'
 path = "./sample_collection"
 lemmas_path = "./lemmas/master_string.txt.with_Frog.wlt.txt"
 
+
 def main():
 
     if not exists(sample_file):
@@ -33,7 +34,7 @@ def main():
         f.write(master_string)
 
     #lemmas, vocab = create_vocabulary(lemmas_path)
-    grecy_test(master_string)
+    grecy_proiel_trf_test(master_string)
     #create_iif(lemmas, sample_df)
 
 
@@ -58,15 +59,24 @@ def create_iif(lemmas: pd.DataFrame, excerpts: pd.DataFrame):
     iif_df.insert(1, "Excerpt", [[] for i in range(len(iif_df.index))]) 
     print(iif_df.loc["αἴτιος", ["POS-tag", "Excerpt"]])
 
-    iif_df.to_csv("./test.csv")
+    iif_df.to_csv("./iif.csv")
 
 
-def grecy_test(text: str):
+def grecy_proiel_trf_test(text: str):
     nlp = spacy.load("grc_proiel_trf")
     doc = nlp(text)
+    lem_df = pd.DataFrame(columns= ["word", "lemma", "pos-tag"])
+
 
     for token in doc:
-        print(f'{token.text}\t lemma: {token.lemma_}\t pos:{token.pos_}')
+        lem_df = pd.concat([pd.DataFrame(
+                [[token.text, token.lemma_, token.pos_]],
+                columns=lem_df.columns),
+                lem_df], ignore_index=True)
+
+    lem_df.to_csv("./lemmas/grecy_lemmas.csv")
+    # print(f'{token.text}\t lemma: {token.lemma_}\t pos:{token.pos_}')
+    
 
 # Function to process texts to brong them to an acceptable form
 def text_clean_up(text: str):
