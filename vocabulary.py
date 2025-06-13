@@ -8,7 +8,9 @@ import spacy
 
 sample_file = './sample_col.csv'
 path = "./sample_collection"
-lemmas_path = "./lemmas/master_string.txt.with_Frog.wlt.txt"
+lemmas_path_glem = "./lemmas/master_string.txt.with_Frog.wlt.txt"
+lemmas_path_grecy = "./lemmas/grecy_lemmas.csv"
+
 
 
 def main():
@@ -18,9 +20,11 @@ def main():
         df = pd.DataFrame.from_dict(parse_file(path))
         df.to_csv(sample_file, index=False)
 
-    if not exists(lemmas_path):
+    if not exists(lemmas_path_glem):
         print("There's no lemma file!\nPlease go to /lemmas and run\n[ python3 ../glem/glem/glem.py -f master_string.txt -v -s with_Frog ]")
         return
+    if not exists(lemmas_path_grecy):
+        print("There's no lemma file!\nPlease run grecy_proiel_trf()\nand produce a lemmas csv.\nIf you don't have the grecy module, please download it.")
 
     #load all texts into a string to parse
     sample_df = pd.read_csv(sample_file, usecols= [2], skiprows= [1])
@@ -33,18 +37,26 @@ def main():
     with open("./lemmas/master_string.txt", "w") as f:
         f.write(master_string)
 
-    #lemmas, vocab = create_vocabulary(lemmas_path)
-    grecy_proiel_trf_test(master_string)
+    lemmas, vocab = create_vocabulary(lemmas_path_glem)
+    print(lemmas)
     #create_iif(lemmas, sample_df)
 
 
 def create_vocabulary(source):
     # after creating the lemmas, create a list of unique lemmas to save
-    lemmas = pd.read_csv(source, header= None, skipfooter=13, sep= "\t", names= ["Word", "Lemma", "POS-tag"], engine= "python")
+    if source == lemmas_path_glem:
+        lemmas = pd.read_csv(source, header= None, skipfooter=13, sep= "\t", names= ["Word", "Lemma", "POS-tag"], engine= "python")
 
-    vocab = lemmas["Lemma"].drop_duplicates(ignore_index= True)
+        vocab = lemmas["Lemma"].drop_duplicates(ignore_index= True)
 
-    vocab.to_csv("./lemmas/Lemmas_Vocabulary.csv", header= None, index= None)
+        vocab.to_csv("./lemmas/Lemmas_Vocabulary.csv", header= None, index= None)
+    
+    elif source == lemmas_path_grecy:
+        lemmas = pd.read_csv(source, header= 0, names= ["Word", "Lemma", "POS-tag"], engine= "python")
+
+        vocab = lemmas["Lemma"].drop_duplicates(ignore_index= True)
+
+        vocab.to_csv("./lemmas/Lemmas_Vocabulary_grecy.csv", header= None, index= None)
     
     return lemmas, vocab
 
@@ -62,7 +74,7 @@ def create_iif(lemmas: pd.DataFrame, excerpts: pd.DataFrame):
     iif_df.to_csv("./iif.csv")
 
 
-def grecy_proiel_trf_test(text: str):
+def grecy_proiel_trf(text: str):
     nlp = spacy.load("grc_proiel_trf")
     doc = nlp(text)
     lem_df = pd.DataFrame(columns= ["word", "lemma", "pos-tag"])
