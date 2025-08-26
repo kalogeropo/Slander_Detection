@@ -37,9 +37,9 @@ def main():
     with open("./lemmas/master_string.txt", "w") as f:
         f.write(master_string)
 
-    lemmas, vocab = create_vocabulary(lemmas_path_glem)
+    lemmas, vocab = create_vocabulary(lemmas_path_grecy)
     print(lemmas)
-    #create_iif(lemmas, sample_df)
+    create_iif(lemmas, sample_df)
 
 
 def create_vocabulary(source):
