@@ -30,6 +30,8 @@ def main():
     sample_df = pd.read_csv(sample_file, usecols= [2], skiprows= [1])
 
     sample_df["excerpt"] = sample_df["excerpt"].apply(text_clean_up)
+    print(sample_df)
+    return
 
     text_list = sample_df["excerpt"].to_list()
     master_string = ' '.join(text_list)
@@ -93,9 +95,9 @@ def grecy_proiel_trf(text: str):
 # Function to process texts to brong them to an acceptable form
 def text_clean_up(text: str):
     # remove punctuations and same value letters
-    cleaned = re.sub(r"\,|\.+|\·|\”|\'|\“|\(|\)", "", text)
-    cleaned = re.sub(r"\s+", " ", cleaned)
-    cleaned = re.sub(r"\,|\.+|\·|\”|\'|\“|\(|\)", "σσ", cleaned)
+    cleaned = re.sub(r"\,|\.+|\·|\”|\'|\“|\(|\)", "", text) # remove punctuation
+    cleaned = re.sub(r"\s+", " ", cleaned)  # remove extra spaces or tabs
+    cleaned = re.sub("ττ", "σσ", cleaned)   # ττ == σσ
 
     # for grecy: Handle different accents of apostrophes
     cleaned = re.sub(r"[ʼ’‘′‵ʹʾʿ`´`´ʹ͵ͻͼ’＇՚]", "\u02BC", cleaned)  # gpt prompted, all common variations that could be an apostrophe

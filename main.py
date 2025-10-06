@@ -32,7 +32,8 @@ if __name__ == '__main__':
     X = vectorizer.fit_transform(df["excerpt"])
     document_df = DataFrame(X.toarray(), columns=vectorizer.get_feature_names_out())
     # print(vectorizer.get_feature_names_out())
-    # print(document_df.head(15))
+    print(document_df.head(15))
+    exit()
 
     pca = PCA(n_components=2)
     df2d = DataFrame(pca.fit_transform(X.toarray()), columns=list('xy'))
