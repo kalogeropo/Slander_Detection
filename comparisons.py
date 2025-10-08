@@ -1,4 +1,5 @@
 import pandas as pd
+import pickle, spacy
 from os.path import exists
 import vocabulary
 from rank_bm25 import BM25Plus, BM25L, BM25Okapi # based on the paper of reference, outperforms simple bm25 in every corpus
@@ -13,20 +14,27 @@ def bm25_1():
     docList = documentDf["excerpt"].apply(vocabulary.text_clean_up).to_list()
 
     tokenized_corpus = [doc.split(" ") for doc in docList]
-    bm25l = BM25L(tokenized_corpus)
+    bm25plus = BM25Plus(tokenized_corpus)
     scoreDF = pd.DataFrame(index= range(1,27) ,columns= range(1, 27))
 
-    print(docList[1])
-    print(bm25l.get_scores(docList[0]))
+    print(bm25plus.get_scores(docList[3].split()))
     
-    index = 0
+    index = 1
     for doc in docList:
 
-        scoreDF[index] = bm25l.get_scores(doc.split())
-        scoreDF[index] = scoreDF[index] / scoreDF[index].max(0) # normalize
+        scoreDF[index] = bm25plus.get_scores(doc.split())
+        # normalize
+        min = scoreDF[index].min(0)
+        scoreDF[index] = (scoreDF[index] - min)
+        max = scoreDF[index].max(0)
+        scoreDF[index] = scoreDF[index] / max # normalize 
         index = index + 1
+
     scoreDF = scoreDF.map(lambda x: round(x, 3))
     scoreDF.to_csv("results/exact_match_bm25.csv")
+
+def bm25_lemmas():
+    nlp = spacy.load("grc_proiel_trf")
 
 if __name__ == "__main__":
     main()
