@@ -5,7 +5,11 @@ import vocabulary
 from rank_bm25 import BM25Plus, BM25L, BM25Okapi # based on the paper of reference, outperforms simple bm25 in every corpus
 
 def main():
-    bm25_1("lemmas")
+    
+    get_top_n_results("lemmas", 5, 0)
+    # bm25_1("lemmas")
+
+
 
 def bm25_1(mode: str):
 # we can pickle the splitted documents and append to it each time we want to add
@@ -64,6 +68,19 @@ def bm25_1(mode: str):
         scoreDF.to_csv("results/exact_match_bm25.csv")
     elif mode == "lemmas":
         scoreDF.to_csv("results/lemmas_match_bm25.csv")
+
+def get_top_n_results(table: str, text_id: int, n: int):
+    if table == "lemmas":
+        doc_sims = pd.read_csv("results/lemmas_match_bm25.csv", header= 0, index_col= 0, usecols= [0, text_id])
+        doc_sims.sort_values(by= str(text_id), ascending= False)
+        print(doc_sims.head(n))
+        return
+
+    elif table == "exact":
+        pass
+    else:
+        print("Not correct input table name!!")
+        return
 
 def grecy_proiel_trf_lemmatize(text: str):
     nlp = spacy.load("grc_proiel_trf")
