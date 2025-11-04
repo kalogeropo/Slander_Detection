@@ -6,7 +6,7 @@ from rank_bm25 import BM25Plus, BM25L, BM25Okapi # based on the paper of referen
 
 def main():
     
-    get_top_n_results("lemmas", 5, 0)
+    get_top_n_results("lemmas", 6, 10)
     # bm25_1("lemmas")
 
 
@@ -72,7 +72,7 @@ def bm25_1(mode: str):
 def get_top_n_results(table: str, text_id: int, n: int):
     if table == "lemmas":
         doc_sims = pd.read_csv("results/lemmas_match_bm25.csv", header= 0, index_col= 0, usecols= [0, text_id])
-        doc_sims.sort_values(by= str(text_id), ascending= False)
+        doc_sims.sort_values(by= str(text_id), ascending= False, inplace= True)
         print(doc_sims.head(n))
         return
 
