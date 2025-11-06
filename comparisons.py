@@ -6,8 +6,9 @@ from rank_bm25 import BM25Plus, BM25L, BM25Okapi # based on the paper of referen
 
 def main():
     
-    # get_top_n_results("lemmas", 5, 0)
-    bm25_1("lemmas")
+    get_top_n_results("average_similarity.csv", 3, 5)
+    #bm25_1("lemmas")
+    #weighted_value()
 
 
 
@@ -70,17 +71,26 @@ def bm25_1(mode: str):
         scoreDF.to_csv("results/lemmas_match_bm25.csv")
 
 def get_top_n_results(table: str, text_id: int, n: int):
-    if table == "lemmas":
-        doc_sims = pd.read_csv("results/lemmas_match_bm25.csv", header= 0, index_col= 0, usecols= [0, text_id])
+    table = "results/" + table
+    if exists(table):
+        doc_sims = pd.read_csv(table, header= 0, index_col= 0, usecols= [0, text_id])
         doc_sims.sort_values(by= str(text_id), ascending= False, inplace= True)
         print(doc_sims.head(n))
         return
 
-    elif table == "exact":
-        pass
     else:
         print("Not correct input table name!!")
         return
+
+
+# create a better visualization for the similarity of each text
+def weighted_value():
+    lemmatized_similarity_df = pd.read_csv("results/lemmas_match_bm25.csv", header= 0, index_col= 0)
+    exact_similarity_df = pd.read_csv("results/exact_match_bm25.csv", header= 0, index_col= 0)
+
+    average_similarity_df = (lemmatized_similarity_df + exact_similarity_df) / 2
+    average_similarity_df = average_similarity_df.map(lambda x: round(x, 3))
+    average_similarity_df.to_csv("results/average_similarity.csv")
 
 def grecy_proiel_trf_lemmatize(text: str):
     nlp = spacy.load("grc_proiel_trf")
