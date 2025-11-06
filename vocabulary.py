@@ -30,8 +30,6 @@ def main():
     sample_df = pd.read_csv(sample_file, usecols= [2], skiprows= [1])
 
     sample_df["excerpt"] = sample_df["excerpt"].apply(text_clean_up)
-    print(sample_df)
-    return
 
     text_list = sample_df["excerpt"].to_list()
     master_string = ' '.join(text_list)
@@ -75,7 +73,7 @@ def create_iif(lemmas: pd.DataFrame, excerpts: pd.DataFrame):
 
     iif_df.to_csv("./iif.csv")
 
-
+# get the lemmas of the words in text and store them in a csv
 def grecy_proiel_trf(text: str):
     nlp = spacy.load("grc_proiel_trf")
     doc = nlp(text)
