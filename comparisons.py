@@ -8,7 +8,7 @@ def main():
     
     get_top_n_results("average_similarity.csv", 3, 5)
     #bm25_1("lemmas")
-    #weighted_value()
+    weighted_value()
 
 
 
