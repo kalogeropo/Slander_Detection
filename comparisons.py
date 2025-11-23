@@ -2,14 +2,27 @@ import pandas as pd
 import pickle, spacy, time, os
 from os.path import exists
 import vocabulary
+from transformers import AutoTokenizer, AutoModel
+import torch
 from rank_bm25 import BM25Plus, BM25L, BM25Okapi # based on the paper of reference, outperforms simple bm25 in every corpus
 
 def main():
-    
-    get_top_n_results("average_similarity.csv", 3, 5)
+    average = "average_similarity.csv"
+    lemmas = "lemmas_match_bm25.csv"
+    exact = "exact_match_bm25.csv"
+    get_top_n_results(lemmas, 3, 5)
+    get_top_n_results(exact, 3, 5)
+    get_top_n_results(average, 3, 5)
     #bm25_1("lemmas")
-    weighted_value()
+    #weighted_value()
 
+
+def AG_BERT():
+    # README instructions to load the model
+    model_name = "pranaydeeps/ancient-greek-bert"
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    model = AutoModel.from_pretrained(model_name)
+    model.eval()  # Set to evaluation mode
 
 
 def bm25_1(mode: str):
@@ -75,7 +88,7 @@ def get_top_n_results(table: str, text_id: int, n: int):
     if exists(table):
         doc_sims = pd.read_csv(table, header= 0, index_col= 0, usecols= [0, text_id])
         doc_sims.sort_values(by= str(text_id), ascending= False, inplace= True)
-        print(doc_sims.head(n))
+        print("from " + table + ":\n", doc_sims.head(n))
         return
 
     else:
