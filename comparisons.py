@@ -10,19 +10,26 @@ def main():
     average = "average_similarity.csv"
     lemmas = "lemmas_match_bm25.csv"
     exact = "exact_match_bm25.csv"
-    get_top_n_results(lemmas, 3, 5)
-    get_top_n_results(exact, 3, 5)
-    get_top_n_results(average, 3, 5)
+
+    text = vocabulary.text_clean_up("δεινόν ἐστιν ἡ διαβολία, ὅτι οὐδὲ τιμωρία τις κατ’ αὐτῶν γέγραπται ἐν τοῖς νόμοις, ὥσπερ τῶν κλεπτῶν, καίτοι ἄριστον ὂν κτῆμα τὴν φιλίαν κλέπτουσιν· ὥστε ἡ ὕβρις κακοῦργος οὖσα δικαιοτέρα ἐστὶ τῆς διαβολῆς διὰ τὸ μὴ ἀφανὴς εἶναι")
+    AG_BERT(text)
     #bm25_1("lemmas")
     #weighted_value()
 
 
-def AG_BERT():
+def AG_BERT(text: str):
     # README instructions to load the model
     model_name = "pranaydeeps/ancient-greek-bert"
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     model = AutoModel.from_pretrained(model_name)
     model.eval()  # Set to evaluation mode
+
+    inputs = tokenizer(text, return_tensors="pt")
+    print(inputs)
+
+    with torch.no_grad():
+        output = model(**inputs)
+        #print(output[0][0][0])
 
 
 def bm25_1(mode: str):
