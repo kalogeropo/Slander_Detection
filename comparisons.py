@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 import pickle, spacy, time, os
 from os.path import exists
 import vocabulary
@@ -16,7 +17,10 @@ def main():
     documentDf.dropna(inplace= True)
     # apply text cleanup to each doc and convert to list of cleaned docs
     docList = documentDf["excerpt"].apply(vocabulary.text_clean_up).to_list()
-    AG_BERT(docList)
+    
+    concat_embeddings(2)
+
+    # print(AG_BERT(docList)[0])
     #bm25_1("lemmas")
     #weighted_value()
 
@@ -32,6 +36,7 @@ def AG_BERT(docList: list):
     path_to_save_dfs_as_pickles = "./pickles/text_embeddings/"
     path_to_save_dfs_as_csvs = "./pickles/embeddings_csvs/"
 
+    cls_emb_list = []
     # README instructions to load the model
     model_name = "pranaydeeps/ancient-greek-bert"
     tokenizer = AutoTokenizer.from_pretrained(model_name)
@@ -60,15 +65,52 @@ def AG_BERT(docList: list):
                 if tokens[i][0] == "#": sub_word = True
 #                                 tensor value id -> int    |||   tensor -> list of floats
                 emb_df.loc[i] = [int(token), i+1, tokens[i], output.last_hidden_state[0, i].tolist(), sub_word]
-            print(emb_df)
+            cls_emb_list.append(output.last_hidden_state[0, 0].tolist())
+            #print(emb_df)
             emb_df.to_pickle(path_to_save_dfs_as_pickles + f"text_{id+1}_emb_dataFrame.pkl")
             emb_df.to_csv(path_to_save_dfs_as_csvs + f"text_{id+1}_embeddings.csv", header= True)
             #print(id, "\n", len(output.last_hidden_state[0]))
+    return(cls_emb_list)
 
-# inputs.input_ids[0] == list of token ids
-# output.last_hidden_state == output tensor for the model, only interested for the first entry
-# output.last_hidden_state[0] == list of embeddings for each token
-# output.last_hidden_state[0, 0] == embedding for [CLS], sum of meaning in a vector
+    # inputs.input_ids[0] == list of token ids
+    # output.last_hidden_state == output tensor for the model, only interested for the first entry
+    # output.last_hidden_state[0] == list of embeddings for each token
+    # output.last_hidden_state[0, 0] == embedding for [CLS], sum of meaning in a vector
+
+# function to get a series of tokens and concatenate them into one if part of subword
+# Also keeps track of the position of the original token. Returns a series of original tokens
+def concat_embeddings(no_of_txt):
+    file_path = f"./pickles/text_embeddings/text_{no_of_txt}_emb_dataFrame.pkl"
+
+    text_df = pd.read_pickle(file_path)
+    text_df["embedding_vec"] = text_df["embedding_vec"].map(lambda x : np.array(x)) # nd.arrays for better perfomance
+
+    mstr_tkn = "" # string to hold the whole word
+    curr_tkn_pos_index = 0 # track the position of the word in text
+    no_of_subwords = 1
+    print(text_df.head(20))
+
+    for i in range(len(text_df.index)):
+        if text_df.at[i, "sub-word"] == False:
+            mstr_tkn = text_df.at[i, "token"] # track the word if splitted
+            text_df.at[i, "position"] = curr_tkn_pos_index # save position in text
+            curr_tkn_pos_index = curr_tkn_pos_index + 1 # append position in text for next word
+            no_of_subwords = 1 # reset tracker of subwords
+
+        else:
+            ind = i - no_of_subwords # index of the master token
+            no_of_subwords = no_of_subwords + 1
+            mstr_tkn = mstr_tkn + text_df.at[i, "token"][2:]
+            text_df.at[ind, "token"] = mstr_tkn
+            text_df.at[ind, "embedding_vec"] = text_df.at[ind, "embedding_vec"] + text_df.at[i, "embedding_vec"]
+
+            # if next entry is a master token, get the average of the embeddings of all subwords and 
+            # save it in the master tokens embedding.
+            if text_df.at[i+1, "sub-word"] == False:
+                text_df.at[ind, "embedding_vec"] = text_df.at[ind, "embedding_vec"] / no_of_subwords
+            
+    final_df = text_df[text_df["sub-word"] == False]
+    print(final_df)
 
 
 
