@@ -3,7 +3,7 @@ import numpy as np
 import pickle, spacy, time, os
 from os.path import exists
 import vocabulary
-from transformers import AutoTokenizer, AutoModel
+#from transformers import AutoTokenizer, AutoModel
 import torch
 from rank_bm25 import BM25Plus, BM25L, BM25Okapi # based on the paper of reference, outperforms simple bm25 in every corpus
 #from flair.models import SequenceTagger
@@ -18,11 +18,35 @@ def main():
     # apply text cleanup to each doc and convert to list of cleaned docs
     docList = documentDf["excerpt"].apply(vocabulary.text_clean_up).to_list()
     
-    concat_embeddings(2)
+    sorted_d = sorted(compare_cls(5).items(), reverse= True)
+    print(sorted_d)
+    #print(concat_embeddings(1))
 
     # print(AG_BERT(docList)[0])
     #bm25_1("lemmas")
     #weighted_value()
+
+def compare_cls(no_of_txt: int):
+    no_of_files = 26
+    results = {}
+    file_path = f"./pickles/text_embeddings/text_{no_of_txt}_emb_dataFrame.pkl"
+
+    text_df = pd.read_pickle(file_path)
+    my_embdng = np.array(text_df.at[0, "embedding_vec"])
+
+    for i in range(1, no_of_files + 1):
+        if no_of_txt == i:
+            results[1.0] = i
+            continue
+        file_path = f"./pickles/text_embeddings/text_{i}_emb_dataFrame.pkl"
+        current_text_df = pd.read_pickle(file_path)
+        curr_embdng = np.array(current_text_df.at[0, "embedding_vec"])
+
+        cos_sim = np.dot(curr_embdng, my_embdng) / (np.linalg.norm(my_embdng) * np.linalg.norm(curr_embdng))
+        results[float(cos_sim)] = i
+        
+
+    return results
 
 # Function to create embeddings with Ancient Greek Bert model of HuggingFace
 # Input: list of texts
@@ -88,7 +112,6 @@ def concat_embeddings(no_of_txt):
     mstr_tkn = "" # string to hold the whole word
     curr_tkn_pos_index = 0 # track the position of the word in text
     no_of_subwords = 1
-    print(text_df.head(20))
 
     for i in range(len(text_df.index)):
         if text_df.at[i, "sub-word"] == False:
@@ -110,7 +133,8 @@ def concat_embeddings(no_of_txt):
                 text_df.at[ind, "embedding_vec"] = text_df.at[ind, "embedding_vec"] / no_of_subwords
             
     final_df = text_df[text_df["sub-word"] == False]
-    print(final_df)
+    final_df
+    return(final_df)
 
 
 
