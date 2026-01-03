@@ -18,42 +18,53 @@ def main():
     # apply text cleanup to each doc and convert to list of cleaned docs
     docList = documentDf["excerpt"].apply(vocabulary.text_clean_up).to_list()
     
-    sorted_d = sorted(compare_cls(5).items(), reverse= True)
-    print(sorted_d)
+    cls_token_dataframe()
     #print(concat_embeddings(1))
 
     # print(AG_BERT(docList)[0])
     #bm25_1("lemmas")
     #weighted_value()
 
+def cls_token_dataframe():
+    cls_df = pd.DataFrame()
+
+    for i in range(1, 27):
+        cls_df[i] = compare_cls(i)["score"]
+    
+    cls_df.to_csv("./results/CLS_token_scores.csv")
+
+# get the embedding of the CLS token of the text and compare it to all other CLS tokens
+# returns: dataframe with id of text and cosine similarity between cls token embeddings.
 def compare_cls(no_of_txt: int):
-    no_of_files = 26
-    results = {}
+    no_of_files = 26    # hard coded iterations for easy of use, change here for more text files
+    results = pd.DataFrame(columns= ["id", "score"])
     file_path = f"./pickles/text_embeddings/text_{no_of_txt}_emb_dataFrame.pkl"
 
-    text_df = pd.read_pickle(file_path)
-    my_embdng = np.array(text_df.at[0, "embedding_vec"])
+    text_df = pd.read_pickle(file_path) # load the pickled dataframe with embeddings
+    my_embdng = np.array(text_df.at[0, "embedding_vec"]) # make lists to np arrays for better perfomance
 
     for i in range(1, no_of_files + 1):
-        if no_of_txt == i:
-            results[1.0] = i
+        if no_of_txt == i:  # if condition, then no need to load and 0compute, absolute similarity
+            results.loc[i] = [i, 1.0] 
             continue
+
         file_path = f"./pickles/text_embeddings/text_{i}_emb_dataFrame.pkl"
         current_text_df = pd.read_pickle(file_path)
         curr_embdng = np.array(current_text_df.at[0, "embedding_vec"])
 
         cos_sim = np.dot(curr_embdng, my_embdng) / (np.linalg.norm(my_embdng) * np.linalg.norm(curr_embdng))
-        results[float(cos_sim)] = i
+        results.loc[i] = [i, float(cos_sim)]
         
 
     return results
 
+
+def AG_BERT(docList: list):
 # Function to create embeddings with Ancient Greek Bert model of HuggingFace
 # Input: list of texts
 # Output: list of vectors of the [CLS] tokens of all texts
 # The function also creates and saves the dataframes with all embeddings 
 # of each text in a pickle format for future usage without the need of running the model again.
-def AG_BERT(docList: list):
 
     os.makedirs("./pickles/text_embeddings", exist_ok= True)
     os.makedirs("./pickles/embeddings_csvs", exist_ok= True)
@@ -101,9 +112,11 @@ def AG_BERT(docList: list):
     # output.last_hidden_state[0] == list of embeddings for each token
     # output.last_hidden_state[0, 0] == embedding for [CLS], sum of meaning in a vector
 
+
+def concat_embeddings(no_of_txt):
 # function to get a series of tokens and concatenate them into one if part of subword
 # Also keeps track of the position of the original token. Returns a series of original tokens
-def concat_embeddings(no_of_txt):
+
     file_path = f"./pickles/text_embeddings/text_{no_of_txt}_emb_dataFrame.pkl"
 
     text_df = pd.read_pickle(file_path)
