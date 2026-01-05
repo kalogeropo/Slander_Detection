@@ -3,10 +3,11 @@ import numpy as np
 import pickle, spacy, time, os
 from os.path import exists
 import vocabulary
-#from transformers import AutoTokenizer, AutoModel
+from transformers import AutoTokenizer, AutoModel
 import torch
 from rank_bm25 import BM25Plus, BM25L, BM25Okapi # based on the paper of reference, outperforms simple bm25 in every corpus
-#from flair.models import SequenceTagger
+
+
 
 def main():
     average = "average_similarity.csv"
@@ -17,9 +18,9 @@ def main():
     documentDf.dropna(inplace= True)
     # apply text cleanup to each doc and convert to list of cleaned docs
     docList = documentDf["excerpt"].apply(vocabulary.text_clean_up).to_list()
-    
+
+    #lol = AG_BERT(docList)
     cls_token_dataframe()
-    #print(concat_embeddings(1))
 
     # print(AG_BERT(docList)[0])
     #bm25_1("lemmas")
@@ -65,7 +66,6 @@ def AG_BERT(docList: list):
 # Output: list of vectors of the [CLS] tokens of all texts
 # The function also creates and saves the dataframes with all embeddings 
 # of each text in a pickle format for future usage without the need of running the model again.
-
     os.makedirs("./pickles/text_embeddings", exist_ok= True)
     os.makedirs("./pickles/embeddings_csvs", exist_ok= True)
     path_to_save_dfs_as_pickles = "./pickles/text_embeddings/"
@@ -98,13 +98,20 @@ def AG_BERT(docList: list):
             for i, token in enumerate(inputs.input_ids[0]):
                 sub_word = False # if current token has ## in front, it's a subtoken. Mark for later.
                 if tokens[i][0] == "#": sub_word = True
-#                                 tensor value id -> int    |||   tensor -> list of floats
-                emb_df.loc[i] = [int(token), i+1, tokens[i], output.last_hidden_state[0, i].tolist(), sub_word]
-            cls_emb_list.append(output.last_hidden_state[0, 0].tolist())
-            #print(emb_df)
+
+                # for normalization and cosine similarity purposes later on
+                embdng = np.array(output.last_hidden_state[0, i].tolist())
+                embdng = embdng / np.linalg.norm(embdng) # normalize
+                print(tokens[i], i)
+
+                emb_df.loc[i] = [int(token), i+1, tokens[i], embdng.tolist(), sub_word]
+                # if cls token
+                if i == 0:
+                    cls_emb_list.append(embdng.tolist())
+
             emb_df.to_pickle(path_to_save_dfs_as_pickles + f"text_{id+1}_emb_dataFrame.pkl")
             emb_df.to_csv(path_to_save_dfs_as_csvs + f"text_{id+1}_embeddings.csv", header= True)
-            #print(id, "\n", len(output.last_hidden_state[0]))
+
     return(cls_emb_list)
 
     # inputs.input_ids[0] == list of token ids
@@ -115,8 +122,7 @@ def AG_BERT(docList: list):
 
 def concat_embeddings(no_of_txt):
 # function to get a series of tokens and concatenate them into one if part of subword
-# Also keeps track of the position of the original token. Returns a series of original tokens
-
+# Also keeps track of the position of the original token. Returns dataframe with original tokens and average embeddings
     file_path = f"./pickles/text_embeddings/text_{no_of_txt}_emb_dataFrame.pkl"
 
     text_df = pd.read_pickle(file_path)
@@ -146,7 +152,6 @@ def concat_embeddings(no_of_txt):
                 text_df.at[ind, "embedding_vec"] = text_df.at[ind, "embedding_vec"] / no_of_subwords
             
     final_df = text_df[text_df["sub-word"] == False]
-    final_df
     return(final_df)
 
 
