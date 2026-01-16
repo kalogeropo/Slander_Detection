@@ -6,6 +6,10 @@ import vocabulary
 from transformers import AutoTokenizer, AutoModel
 import torch
 from rank_bm25 import BM25Plus, BM25L, BM25Okapi # based on the paper of reference, outperforms simple bm25 in every corpus
+from flair.models import SequenceTagger
+
+
+from pathlib import Path
 
 
 
@@ -20,11 +24,29 @@ def main():
     docList = documentDf["excerpt"].apply(vocabulary.text_clean_up).to_list()
 
     #lol = AG_BERT(docList)
-    cls_token_dataframe()
+    print(synonyms(no_of_text= 9, threshold= 0.65))
 
     # print(AG_BERT(docList)[0])
     #bm25_1("lemmas")
-    #weighted_value()
+    #weighted_value() 
+
+def test():
+
+    target_dir = Path("/home/rabanis/Desktop/ceid/diploma/Slander_Detection/model/Ancient-Greek-BERT/LM/SuperPeitho-v1")
+    target_dir.mkdir(parents=True, exist_ok=True)
+
+    tokenizer = AutoTokenizer.from_pretrained("pranaydeeps/Ancient-Greek-BERT")
+    model = AutoModel.from_pretrained("pranaydeeps/Ancient-Greek-BERT")
+
+    tokenizer.save_pretrained(target_dir)
+    model.save_pretrained(target_dir)
+
+    print("Saved to:", target_dir)
+
+
+    os.chdir("/home/rabanis/Desktop/ceid/diploma/Slander_Detection/model/Ancient-Greek-BERT/SuperPeitho-FLAIR-v2")
+    tagger = SequenceTagger.load("best-model.pt")
+
 
 def cls_token_dataframe():
     cls_df = pd.DataFrame()
@@ -153,6 +175,43 @@ def concat_embeddings(no_of_txt):
             
     final_df = text_df[text_df["sub-word"] == False]
     return(final_df)
+
+def synonyms(no_of_text: int, threshold = 0.7):
+
+    my_text_df = concat_embeddings(no_of_txt=no_of_text)
+    results = []
+
+    for i in range(1, 27):
+        if i == no_of_text:
+            continue
+
+        testing_df = concat_embeddings(i)
+
+        for j in my_text_df.index:
+            word = my_text_df.at[j, "token"]
+            if word in ["[SEP]", "[CLS]", "[UNK]"]:
+                continue
+            emb1 = my_text_df.at[j, "embedding_vec"]
+
+            for k in testing_df.index:
+                word_k = testing_df.at[k, "token"]
+                emb2 = testing_df.at[k, "embedding_vec"]
+
+                # cosine similarity (for normalized embeddings, dot is enough)
+                sim = np.dot(emb1, emb2)
+
+                if sim >= threshold:
+                    results.append({
+                        "source_word": word,
+                        "target_word": word_k,
+                        "target_text": i,
+                        "similarity": float(sim)
+                    })
+
+    synonym_df = pd.DataFrame(results)
+    return synonym_df
+                
+
 
 
 
