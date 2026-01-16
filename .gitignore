@@ -12,6 +12,9 @@ Diorisis/
 # GLEM folder
 glem/
 
+# model folder
+model/
+
 # Distribution / packaging
 .Python
 build/
