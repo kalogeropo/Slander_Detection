@@ -1,15 +1,17 @@
 import pandas as pd
 import numpy as np
-import pickle, spacy, time, os
+import pickle, spacy, time, os, math, torch, vocabulary, matplotlib
 from os.path import exists
-import vocabulary
+from collections import Counter
+from sklearn.feature_extraction import DictVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 from transformers import AutoTokenizer, AutoModel
-import torch
 from rank_bm25 import BM25Plus, BM25L, BM25Okapi # based on the paper of reference, outperforms simple bm25 in every corpus
 from flair.models import SequenceTagger
-
-
+from flair.data import Sentence
 from pathlib import Path
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 
 
@@ -24,29 +26,83 @@ def main():
     docList = documentDf["excerpt"].apply(vocabulary.text_clean_up).to_list()
 
     #lol = AG_BERT(docList)
-    print(synonyms(no_of_text= 9, threshold= 0.65))
+    #print(synonyms(no_of_text= 9, threshold= 0.65))
+    morph_tagger(docList= docList)
 
     # print(AG_BERT(docList)[0])
     #bm25_1("lemmas")
     #weighted_value() 
 
-def test():
+def morph_tagger(docList: list):
+    os.makedirs("./pickles/morph_tags", exist_ok= True)
+    os.makedirs("./pickles/morph_tags_csvs", exist_ok= True)
+    path_to_save_dfs_as_pickles = "./pickles/morph_tags/"
+    path_to_save_dfs_as_csvs = "./pickles/morph_tags_csvs/"
 
-    target_dir = Path("/home/rabanis/Desktop/ceid/diploma/Slander_Detection/model/Ancient-Greek-BERT/LM/SuperPeitho-v1")
-    target_dir.mkdir(parents=True, exist_ok=True)
-
-    tokenizer = AutoTokenizer.from_pretrained("pranaydeeps/Ancient-Greek-BERT")
-    model = AutoModel.from_pretrained("pranaydeeps/Ancient-Greek-BERT")
-
-    tokenizer.save_pretrained(target_dir)
-    model.save_pretrained(target_dir)
-
-    print("Saved to:", target_dir)
-
-
-    os.chdir("/home/rabanis/Desktop/ceid/diploma/Slander_Detection/model/Ancient-Greek-BERT/SuperPeitho-FLAIR-v2")
+    # hardcoded the path to the model to avoid any issues at last minute :((
+    os.chdir("/home/rabanis/Desktop/ceid/diploma/model/Ancient-Greek-BERT/SuperPeitho-FLAIR-v2")
     tagger = SequenceTagger.load("best-model.pt")
+    print("\n\n\n")
 
+    ids = []
+    morph_triplets = []
+
+    ## Get tag triplets for all texts and append them to the list
+    for id, text in enumerate(docList):
+        s = Sentence(text)
+        tagger.predict(s) #generate tags
+        s_tags = [simplify(token.get_label( "pos" ).value ) for token in s] # list to hold the simplified tags in order
+        tags = morph_profile(s_tags)
+
+        ids.append(id)
+        morph_triplets.append(tags)
+
+    # Vectorize all text triplet counts with Scikit learn for speed
+    vec = DictVectorizer()
+    morph_matrix = vec.fit_transform(morph_triplets)
+
+    os.chdir("/home/rabanis/Desktop/ceid/diploma/Slander_Detection")
+    # Compare with cosine similarity
+    Sim = cosine_similarity(morph_matrix)
+    sim_df = pd.DataFrame(Sim).map(lambda x: round(x, 4))
+    sim_df.to_csv("./results/morph_similarities_no_case.csv")
+    
+
+    """
+    plt.figure(figsize=(10,8))
+
+    sns.heatmap(
+        Sim,
+        xticklabels=ids,
+        yticklabels=ids,
+        cmap="viridis",      # dark = similar
+        square=True
+    )
+
+    plt.title("Morphological Similarity (Cosine)")
+    plt.tight_layout()
+    print(os.getcwd())
+    plt.savefig("./figures/morph_no_case.png")"""
+            
+        
+
+
+## HELPFUL FUNCTIONS - GENERATED. ####################
+def ngrams(seq, n=3):
+    return [tuple(seq[i:i+n]) for i in range(len(seq)-n+1)]
+
+def morph_profile(tags):
+    grams = ngrams(tags, 3)
+    return Counter(grams)
+
+def simplify(tag):
+    pos = tag[0]
+    number = tag[1]
+    gender = tag[5]
+    case = tag[6]
+    return f"{pos}{number}{gender}"#{case}"
+
+######## END OF HELPFUL FUNCTIONS #########
 
 def cls_token_dataframe():
     cls_df = pd.DataFrame()
@@ -189,12 +245,17 @@ def synonyms(no_of_text: int, threshold = 0.7):
 
         for j in my_text_df.index:
             word = my_text_df.at[j, "token"]
-            if word in ["[SEP]", "[CLS]", "[UNK]"]:
+            pos = my_text_df.at[j, "position"]
+            if word in ["[SEP]", "[CLS]", "[UNK]", "και", "τις",
+                        "γαρ", "το", "τα", "κατα", "του", "εκ",
+                        "αν", "δε", "τον", "την", "τοις",
+                        "δη", "μεν", "τω", "τους", "ο", "η"]:
                 continue
             emb1 = my_text_df.at[j, "embedding_vec"]
 
             for k in testing_df.index:
                 word_k = testing_df.at[k, "token"]
+                pos_k = testing_df.at[k, "position"]
                 emb2 = testing_df.at[k, "embedding_vec"]
 
                 # cosine similarity (for normalized embeddings, dot is enough)
@@ -203,15 +264,19 @@ def synonyms(no_of_text: int, threshold = 0.7):
                 if sim >= threshold:
                     results.append({
                         "source_word": word,
+                        "source_w_pos": pos,
                         "target_word": word_k,
+                        "target_w_pos": pos_k,
                         "target_text": i,
                         "similarity": float(sim)
                     })
 
-    synonym_df = pd.DataFrame(results)
-    return synonym_df
+    if len(results) != 0:
+        synonym_df = pd.DataFrame(results) 
+        return synonym_df.sort_values(axis= 0, by= "similarity", ascending= False)
+    else:
+        return 0
                 
-
 
 
 
