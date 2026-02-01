@@ -26,33 +26,38 @@ def main():
     docList = documentDf["excerpt"].apply(vocabulary.text_clean_up).to_list()
 
     #lol = AG_BERT(docList)
-    #print(synonyms(no_of_text= 9, threshold= 0.65))
-    morph_tagger(docList= docList)
+    compare_synonyms()
+    #print(morph_tagger(docList= docList)[1])
 
     # print(AG_BERT(docList)[0])
     #bm25_1("lemmas")
     #weighted_value() 
 
+
+
 def morph_tagger(docList: list):
-    os.makedirs("./pickles/morph_tags", exist_ok= True)
-    os.makedirs("./pickles/morph_tags_csvs", exist_ok= True)
-    path_to_save_dfs_as_pickles = "./pickles/morph_tags/"
-    path_to_save_dfs_as_csvs = "./pickles/morph_tags_csvs/"
+    # Function to load the morphological tagger and parse all
+    # texts with it to generate the tags. Then use them to create 
+    # ngrams, probably trigrams, and create frequency vectors for each text.
+    # Compare, plot, store and return the results 
+
+    ###### UTILITY VARIABLES ###########
+    morphological_mode = "no_case" # one place to change the name of files based on what morph pos we get
 
     # hardcoded the path to the model to avoid any issues at last minute :((
     os.chdir("/home/rabanis/Desktop/ceid/diploma/model/Ancient-Greek-BERT/SuperPeitho-FLAIR-v2")
-    tagger = SequenceTagger.load("best-model.pt")
-    print("\n\n\n")
+    tagger = SequenceTagger.load("best-model.pt")   # Load the tagger
+    print("\n\n\n") # clearer print output
 
     ids = []
     morph_triplets = []
 
     ## Get tag triplets for all texts and append them to the list
-    for id, text in enumerate(docList):
+    for id, text in enumerate(docList): #get each text
         s = Sentence(text)
         tagger.predict(s) #generate tags
         s_tags = [simplify(token.get_label( "pos" ).value ) for token in s] # list to hold the simplified tags in order
-        tags = morph_profile(s_tags)
+        tags = morph_profile(s_tags)    # create the ngrams
 
         ids.append(id)
         morph_triplets.append(tags)
@@ -61,46 +66,53 @@ def morph_tagger(docList: list):
     vec = DictVectorizer()
     morph_matrix = vec.fit_transform(morph_triplets)
 
+    #change cwd due to the change earlier for the model loading
     os.chdir("/home/rabanis/Desktop/ceid/diploma/Slander_Detection")
     # Compare with cosine similarity
     Sim = cosine_similarity(morph_matrix)
-    sim_df = pd.DataFrame(Sim).map(lambda x: round(x, 4))
-    sim_df.to_csv("./results/morph_similarities_no_case.csv")
-    
+    sim_df = pd.DataFrame(Sim, index= ids, columns= ids).map(lambda x: round(x, 4))
+    sim_df.to_csv("./results/morph_similarities_" + morphological_mode + ".csv")
 
-    """
+    # plot and return results
+    plot_similarities(sim_df, "morph_" + morphological_mode)
+    return sim_df, morph_triplets
+            
+
+###### HELPFUL FUNCTIONS ####################
+def ngrams(seq, n=3):
+    # return the trigram for n=3 of the input sequence
+    return [tuple(seq[i:i+n]) for i in range(len(seq)-n+1)]
+
+def morph_profile(tags):
+    # get the simplified tags and return a counted set of their ngrams -> vector representation
+    grams = ngrams(tags, 3)
+    return Counter(grams)
+
+def simplify(tag):
+    # simplify the pos tags using only up to 4 of the 9 parts.
+    pos = tag[0]
+    number = tag[1]
+    gender = tag[5]
+    case = tag[6]
+    return f"{pos}{number}{gender}"#{case}"
+
+def plot_similarities(sim_df, name):
+
+    pth = "./figures/"+name
+
     plt.figure(figsize=(10,8))
 
     sns.heatmap(
-        Sim,
-        xticklabels=ids,
-        yticklabels=ids,
+        sim_df,
+        xticklabels=sim_df.index,
+        yticklabels=sim_df.columns,
         cmap="viridis",      # dark = similar
         square=True
     )
 
     plt.title("Morphological Similarity (Cosine)")
     plt.tight_layout()
-    print(os.getcwd())
-    plt.savefig("./figures/morph_no_case.png")"""
-            
-        
-
-
-## HELPFUL FUNCTIONS - GENERATED. ####################
-def ngrams(seq, n=3):
-    return [tuple(seq[i:i+n]) for i in range(len(seq)-n+1)]
-
-def morph_profile(tags):
-    grams = ngrams(tags, 3)
-    return Counter(grams)
-
-def simplify(tag):
-    pos = tag[0]
-    number = tag[1]
-    gender = tag[5]
-    case = tag[6]
-    return f"{pos}{number}{gender}"#{case}"
+    plt.savefig(pth + ".png")
 
 ######## END OF HELPFUL FUNCTIONS #########
 
@@ -233,12 +245,22 @@ def concat_embeddings(no_of_txt):
     return(final_df)
 
 def synonyms(no_of_text: int, threshold = 0.7):
+#   compare the embeddings of all words in a text with all words from other texts
+#   and keep only the words that matched over a certain percentile.
 
+    # store the concatenated embeddings
     my_text_df = concat_embeddings(no_of_txt=no_of_text)
     results = []
 
+    # list of stopword tokens to skip while comparing. They get
+    #extremely similar scores but serve no purpose in the comparisons
+    stopwords = ["[SEP]", "[CLS]", "[UNK]", "και", "τις",
+                "γαρ", "το", "τα", "κατα", "του", "εκ",
+                "αν", "δε", "τον", "την", "τοις",
+                "δη", "μεν", "τω", "τους", "ο", "η"]
+
     for i in range(1, 27):
-        if i == no_of_text:
+        if i == no_of_text: #skip same text, no reason for that
             continue
 
         testing_df = concat_embeddings(i)
@@ -246,14 +268,15 @@ def synonyms(no_of_text: int, threshold = 0.7):
         for j in my_text_df.index:
             word = my_text_df.at[j, "token"]
             pos = my_text_df.at[j, "position"]
-            if word in ["[SEP]", "[CLS]", "[UNK]", "και", "τις",
-                        "γαρ", "το", "τα", "κατα", "του", "εκ",
-                        "αν", "δε", "τον", "την", "τοις",
-                        "δη", "μεν", "τω", "τους", "ο", "η"]:
+
+            if word in stopwords:
                 continue
+
+            # current text, embdng of the target word j
             emb1 = my_text_df.at[j, "embedding_vec"]
 
             for k in testing_df.index:
+                #check the testing texts' words one by one
                 word_k = testing_df.at[k, "token"]
                 pos_k = testing_df.at[k, "position"]
                 emb2 = testing_df.at[k, "embedding_vec"]
@@ -276,9 +299,12 @@ def synonyms(no_of_text: int, threshold = 0.7):
         return synonym_df.sort_values(axis= 0, by= "similarity", ascending= False)
     else:
         return 0
-                
 
-
+def compare_synonyms():
+    sim_threshold = 0.65
+    for i in range(1, 27):
+        i_synonyms = synonyms(no_of_text= i, threshold= sim_threshold)
+        print(i, "\t", i_synonyms)
 
 def bm25_1(mode: str):
 # we can pickle the splitted documents and append to it each time we want to add
