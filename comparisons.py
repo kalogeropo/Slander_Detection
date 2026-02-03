@@ -26,7 +26,8 @@ def main():
     docList = documentDf["excerpt"].apply(vocabulary.text_clean_up).to_list()
 
     #lol = AG_BERT(docList)
-    compare_synonyms()
+    #compare_synonyms()
+    plot_similarities(pd.read_csv("./results/lemmas_match_bm25.csv",  index_col=0), "lemmas_match_bm25")
     #print(morph_tagger(docList= docList)[1])
 
     # print(AG_BERT(docList)[0])
@@ -42,7 +43,7 @@ def morph_tagger(docList: list):
     # Compare, plot, store and return the results 
 
     ###### UTILITY VARIABLES ###########
-    morphological_mode = "no_case" # one place to change the name of files based on what morph pos we get
+    morphological_mode = "pos_only" # one place to change the name of files based on what morph pos we get
 
     # hardcoded the path to the model to avoid any issues at last minute :((
     os.chdir("/home/rabanis/Desktop/ceid/diploma/model/Ancient-Greek-BERT/SuperPeitho-FLAIR-v2")
@@ -59,7 +60,7 @@ def morph_tagger(docList: list):
         s_tags = [simplify(token.get_label( "pos" ).value ) for token in s] # list to hold the simplified tags in order
         tags = morph_profile(s_tags)    # create the ngrams
 
-        ids.append(id)
+        ids.append(id+1) # keep the id starting from 1 to be inline with the rest of the results
         morph_triplets.append(tags)
 
     # Vectorize all text triplet counts with Scikit learn for speed
@@ -94,7 +95,7 @@ def simplify(tag):
     number = tag[1]
     gender = tag[5]
     case = tag[6]
-    return f"{pos}{number}{gender}"#{case}"
+    return f"{pos}"#{number}{gender}{case}"
 
 def plot_similarities(sim_df, name):
 
@@ -106,11 +107,18 @@ def plot_similarities(sim_df, name):
         sim_df,
         xticklabels=sim_df.index,
         yticklabels=sim_df.columns,
-        cmap="viridis",      # dark = similar
-        square=True
+        cmap="cividis",
+        vmin=0.0,
+        vmax=1.0,
+        square=True,
+        linewidths=0.3,
+        linecolor="black",
+        cbar_kws={"label": "Σημασιολογική Ομοιότητα"}
     )
 
-    plt.title("Morphological Similarity (Cosine)")
+    plt.xticks(rotation=45, ha="right", fontsize=9)
+    plt.yticks(rotation=0, fontsize=9)
+
     plt.tight_layout()
     plt.savefig(pth + ".png")
 
