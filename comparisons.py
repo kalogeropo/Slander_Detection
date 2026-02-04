@@ -26,8 +26,9 @@ def main():
     docList = documentDf["excerpt"].apply(vocabulary.text_clean_up).to_list()
 
     #lol = AG_BERT(docList)
+    evaluate_all()
     #compare_synonyms()
-    plot_similarities(pd.read_csv("./results/lemmas_match_bm25.csv",  index_col=0), "lemmas_match_bm25")
+    #plot_similarities(pd.read_csv("./results/lemmas_match_bm25.csv",  index_col=0), "lemmas_match_bm25")
     #print(morph_tagger(docList= docList)[1])
 
     # print(AG_BERT(docList)[0])
@@ -35,6 +36,70 @@ def main():
     #weighted_value() 
 
 
+def evaluate_all():
+    folder = "results/weighted_results"
+
+    #### LOAD THE CORRELATION LIST ####
+    correct_df = pd.read_csv("results/correct_list.csv",
+                            usecols= [0, 1, 2],
+                            index_col= "id", 
+                            names= ["id", "author", "relation_list"], 
+                            header= None)
+    
+    # format the dataframe to list of ints and zeros for nan
+    for i in range(1, 27):
+        item = correct_df.at[i, "relation_list"]
+        # for the strings to become lists of ints
+        if type(item) is str:
+            item = item.split(", ") #split the string without commas and whitespaces
+            rslt = list(map(int, item)) # make list of strings to list of ints
+            correct_df.at[i, "relation_list"] = rslt # save results
+        # for the nan to become 0
+        elif pd.isna(item):
+            correct_df.at[i, "relation_list"] = [0] # made a list to get length later for topk
+    
+    results = []
+
+    for file in Path(folder).glob("weighted*.csv"):
+
+        df = pd.read_csv(file, index_col=0)
+
+        p = precision_at_k(df, correct_df)
+
+        results.append((file.name, p))
+
+    results.sort(key=lambda x: x[1], reverse=True)
+
+    for name, score in results:
+        print(f"{name:35s}  precision@k = {score:.4f}")
+
+    return results
+
+
+def precision_at_k(sim_df, truth_df):
+    """evaluate precision@k for the input similarity dataframe and 
+    return the average precision"""
+    scores = []
+
+    for i in sim_df.index:
+
+        sims = sim_df.loc[i].drop(str(i))  # remove self
+
+        # number of true relations
+        true = truth_df.loc[i, "relation_list"]
+        k = len(true)
+
+        if k == 0:
+            continue
+
+        # top-k predictions
+        topk = sims.sort_values(ascending=False).head(k).index.astype(int)
+
+        tp = len(set(topk) & set(true))
+
+        scores.append(tp / k)
+
+    return np.mean(scores)
 
 def morph_tagger(docList: list):
     # Function to load the morphological tagger and parse all
@@ -66,6 +131,7 @@ def morph_tagger(docList: list):
     # Vectorize all text triplet counts with Scikit learn for speed
     vec = DictVectorizer()
     morph_matrix = vec.fit_transform(morph_triplets)
+    print(morph_matrix)
 
     #change cwd due to the change earlier for the model loading
     os.chdir("/home/rabanis/Desktop/ceid/diploma/Slander_Detection")
@@ -78,7 +144,6 @@ def morph_tagger(docList: list):
     plot_similarities(sim_df, "morph_" + morphological_mode)
     return sim_df, morph_triplets
             
-
 ###### HELPFUL FUNCTIONS ####################
 def ngrams(seq, n=3):
     # return the trigram for n=3 of the input sequence
@@ -97,7 +162,9 @@ def simplify(tag):
     case = tag[6]
     return f"{pos}"#{number}{gender}{case}"
 
-def plot_similarities(sim_df, name):
+def plot_similarities(sim_df, name, min = 0.0, max = 1.0):
+    """plot the values of the sim_df in a heatmap. By default
+    the range is [0, 1] but it can be revalued."""
 
     pth = "./figures/"+name
 
@@ -108,8 +175,8 @@ def plot_similarities(sim_df, name):
         xticklabels=sim_df.index,
         yticklabels=sim_df.columns,
         cmap="cividis",
-        vmin=0.0,
-        vmax=1.0,
+        vmin=min,
+        vmax=max,
         square=True,
         linewidths=0.3,
         linecolor="black",
@@ -121,6 +188,18 @@ def plot_similarities(sim_df, name):
 
     plt.tight_layout()
     plt.savefig(pth + ".png")
+
+def minmax_df(df):
+    # calculate the minmax-scores for better comparisons 
+    M = df.values.astype(float)
+
+    # ignore diagonal (self-similarity = 1s)
+    mask = ~np.eye(M.shape[0], dtype=bool)
+    mn = M[mask].min()
+    mx = M[mask].max()
+
+    scaled = (M - mn) / (mx - mn)
+    return pd.DataFrame(scaled, index=df.index, columns=df.columns)
 
 ######## END OF HELPFUL FUNCTIONS #########
 
@@ -156,7 +235,6 @@ def compare_cls(no_of_txt: int):
         
 
     return results
-
 
 def AG_BERT(docList: list):
 # Function to create embeddings with Ancient Greek Bert model of HuggingFace
@@ -216,7 +294,6 @@ def AG_BERT(docList: list):
     # output.last_hidden_state == output tensor for the model, only interested for the first entry
     # output.last_hidden_state[0] == list of embeddings for each token
     # output.last_hidden_state[0, 0] == embedding for [CLS], sum of meaning in a vector
-
 
 def concat_embeddings(no_of_txt):
 # function to get a series of tokens and concatenate them into one if part of subword
@@ -292,7 +369,7 @@ def synonyms(no_of_text: int, threshold = 0.7):
                 # cosine similarity (for normalized embeddings, dot is enough)
                 sim = np.dot(emb1, emb2)
 
-                if sim >= threshold:
+                if sim <= -threshold:
                     results.append({
                         "source_word": word,
                         "source_w_pos": pos,
@@ -383,15 +460,57 @@ def get_top_n_results(table: str, text_id: int, n: int):
         print("Not correct input table name!!")
         return
 
-
 # create a better visualization for the similarity of each text
 def weighted_value():
-    lemmatized_similarity_df = pd.read_csv("results/lemmas_match_bm25.csv", header= 0, index_col= 0)
-    exact_similarity_df = pd.read_csv("results/exact_match_bm25.csv", header= 0, index_col= 0)
+    """This function serves as the final step in order to calculate the 
+    final weighted score of all other scores. The user needs to define 
+    in the result_name var what results they are expecting with proper
+    naming. Also, depending on the morphological tags in need, they need
+    to use the according dataframe manually. Normalize all score matrices
+    and compute the weighted sum."""
 
-    average_similarity_df = (lemmatized_similarity_df + exact_similarity_df) / 2
-    average_similarity_df = average_similarity_df.map(lambda x: round(x, 3))
-    average_similarity_df.to_csv("results/average_similarity.csv")
+    #### LOAD THE RESULTS OF EACH METHOD ####
+    exact = pd.read_csv("results/exact_match_bm25.csv", header=0, index_col=0)
+    lemma = pd.read_csv("results/lemmas_match_bm25.csv", header=0, index_col=0)
+    cls   = pd.read_csv("results/CLS_token_scores.csv", header=0, index_col=0)
+    morph_sim_no_case_df = pd.read_csv("results/morph_similarities_no_case.csv", header= 0, index_col= 0)
+    morph_sim_full_tag_df = pd.read_csv("results/morph_similarities_full_tag.csv", header= 0, index_col= 0)
+    morph_sim_pos_only_df = pd.read_csv("results/morph_similarities_pos_only.csv", header= 0, index_col= 0)
+
+    # util var
+    result_name = "weighted_result_no_case_morphWeights"
+
+    #### MIN-MAX NORMALIZE ####
+    exact_norm = minmax_df(exact)
+    lemma_norm = minmax_df(lemma)
+    cls_norm   = minmax_df(cls)
+    morph_norm = minmax_df(morph_sim_no_case_df)
+
+
+    #### STACK → (4, 26, 26) ####
+    stack = np.stack([
+        exact_norm.values,
+        lemma_norm.values,
+        cls_norm.values,
+        morph_norm.values
+    ])
+     #### WEIGHTS ####
+    weights = np.array([0.1,   # exact
+                        0.25,   # lemmas
+                        0.25,   # cls
+                        0.4])  # morph
+
+    #### VECTORISED WEIGHTED SUM ####
+    weighted = np.tensordot(weights, stack, axes=(0, 0))
+
+    weighted_score_df = pd.DataFrame(weighted, index=exact.index, columns=exact.columns)
+
+
+    # round the results to 4 digits
+    weighted_score_df = weighted_score_df.map(lambda x: round(x, 4))
+    weighted_score_df.to_csv("results/" + result_name + ".csv") #save
+    plot_similarities(weighted_score_df, result_name)   #plot
+    return weighted_score_df
 
 def grecy_proiel_trf_lemmatize(text: str):
     nlp = spacy.load("grc_proiel_trf")
