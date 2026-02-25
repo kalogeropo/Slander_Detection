@@ -69,7 +69,6 @@ def create_iif(lemmas: pd.DataFrame, excerpts: pd.DataFrame):
 
     iif_df = lemmas.set_index(["Lemma", "Word"], drop= True) # sort by lemmas and words
     iif_df.insert(1, "Excerpt", [[] for i in range(len(iif_df.index))]) 
-    print(iif_df.loc["αἴτιος", ["POS-tag", "Excerpt"]])
 
     iif_df.to_csv("./iif.csv")
 

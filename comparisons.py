@@ -60,7 +60,8 @@ def evaluate_all():
     
     results = []
 
-    for file in Path(folder).glob("weighted*.csv"):
+    #for file in Path(folder).glob("weighted*.csv"):
+    for file in Path("results").glob("exact*.csv"):
 
         df = pd.read_csv(file, index_col=0)
 
@@ -87,9 +88,9 @@ def precision_at_k(sim_df, truth_df):
 
         # number of true relations
         true = truth_df.loc[i, "relation_list"]
-        k = len(true)
+        k = len(true) 
 
-        if k == 0:
+        if len(true) == 0:
             continue
 
         # top-k predictions
@@ -369,7 +370,7 @@ def synonyms(no_of_text: int, threshold = 0.7):
                 # cosine similarity (for normalized embeddings, dot is enough)
                 sim = np.dot(emb1, emb2)
 
-                if sim <= -threshold:
+                if sim >= threshold:
                     results.append({
                         "source_word": word,
                         "source_w_pos": pos,
@@ -383,10 +384,10 @@ def synonyms(no_of_text: int, threshold = 0.7):
         synonym_df = pd.DataFrame(results) 
         return synonym_df.sort_values(axis= 0, by= "similarity", ascending= False)
     else:
-        return 0
+        return results
 
 def compare_synonyms():
-    sim_threshold = 0.65
+    sim_threshold = 0.60
     for i in range(1, 27):
         i_synonyms = synonyms(no_of_text= i, threshold= sim_threshold)
         print(i, "\t", i_synonyms)
